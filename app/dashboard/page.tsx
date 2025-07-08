@@ -10,13 +10,24 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Проверяем авторизацию при загрузке страницы
-    if (!isAuthenticated()) {
+    console.log('🏠 Dashboard page loaded, checking auth...')
+    const authStatus = isAuthenticated()
+    console.log('🔐 Dashboard auth check result:', authStatus)
+    
+    if (!authStatus) {
+      console.log('❌ Not authenticated, redirecting to home...')
       router.push('/')
+    } else {
+      console.log('✅ Authenticated, staying on dashboard')
     }
   }, [router])
 
   // Если пользователь не авторизован, не показываем ничего
-  if (!isAuthenticated()) {
+  const currentAuthStatus = isAuthenticated()
+  console.log('🔄 Dashboard render auth check:', currentAuthStatus)
+  
+  if (!currentAuthStatus) {
+    console.log('🚫 Rendering null due to no auth')
     return null
   }
 

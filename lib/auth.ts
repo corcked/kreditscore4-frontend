@@ -3,15 +3,27 @@ import { authApi, type User } from './api'
 
 // Проверка авторизации пользователя
 export function isAuthenticated(): boolean {
-  return !!Cookies.get('access_token')
+  const token = Cookies.get('access_token')
+  console.log('🔍 isAuthenticated check:', { token: token ? 'EXISTS' : 'MISSING', tokenLength: token?.length })
+  return !!token
 }
 
 // Сохранение токена авторизации
 export function saveAuthToken(token: string): void {
+  console.log('💾 Saving auth token:', { tokenLength: token.length, token: token.substring(0, 20) + '...' })
+  
   Cookies.set('access_token', token, { 
     expires: 7, // 7 дней
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict'
+  })
+  
+  // Проверяем сразу после сохранения
+  const savedToken = Cookies.get('access_token')
+  console.log('✅ Token saved verification:', { 
+    saved: savedToken ? 'YES' : 'NO', 
+    matches: savedToken === token,
+    environment: process.env.NODE_ENV
   })
 }
 
@@ -73,11 +85,24 @@ export async function startTelegramAuth(loanData?: {
 // Завершение авторизации с токеном
 export async function completeAuth(authToken: string): Promise<User> {
   try {
+    console.log('🚀 Starting completeAuth with authToken:', authToken.substring(0, 20) + '...')
+    
     const response = await authApi.checkAuthStatus(authToken)
+    console.log('📥 API response:', { 
+      hasAccessToken: !!response.access_token,
+      accessTokenLength: response.access_token?.length,
+      hasUser: !!response.user
+    })
+    
     saveAuthToken(response.access_token)
+    
+    // Дополнительная проверка после сохранения
+    const isNowAuthenticated = isAuthenticated()
+    console.log('🎯 Auth status after save:', { isNowAuthenticated })
+    
     return response.user
   } catch (error) {
-    console.error('Ошибка при завершении авторизации:', error)
+    console.error('❌ Ошибка при завершении авторизации:', error)
     throw new Error('Не удалось завершить авторизацию')
   }
 } 

@@ -16,29 +16,51 @@ export default function HomePage() {
 
   const checkAuthState = async () => {
     try {
+      console.log('🏁 HomePage: Starting checkAuthState...')
+      
       // Проверяем, есть ли уже авторизация
-      if (isAuthenticated()) {
+      const isAlreadyAuth = isAuthenticated()
+      console.log('🔍 HomePage: Current auth status:', isAlreadyAuth)
+      
+      if (isAlreadyAuth) {
+        console.log('✅ HomePage: Already authenticated, redirecting to dashboard...')
         router.push('/dashboard')
         return
       }
 
       // Проверяем, есть ли токен в URL (возврат из Telegram)
       const authToken = handleAuthCallback()
+      console.log('🎫 HomePage: Auth token from URL:', authToken ? authToken.substring(0, 20) + '...' : 'NONE')
       
       if (authToken) {
+        console.log('🚀 HomePage: Found auth token, starting completion...')
         setAuthInProgress(true)
         try {
-          await completeAuth(authToken)
-          router.push('/dashboard')
+          const user = await completeAuth(authToken)
+          console.log('✅ HomePage: Auth completed successfully, user:', user.telegram_id)
+          
+          // Дополнительная проверка статуса авторизации
+          const finalAuthCheck = isAuthenticated()
+          console.log('🔐 HomePage: Final auth check before redirect:', finalAuthCheck)
+          
+          if (finalAuthCheck) {
+            console.log('➡️ HomePage: Redirecting to dashboard...')
+            router.push('/dashboard')
+          } else {
+            console.error('❌ HomePage: Auth completion failed - no token found after completion!')
+            alert('Ошибка авторизации. Токен не сохранился.')
+          }
         } catch (error) {
-          console.error('Ошибка завершения авторизации:', error)
+          console.error('❌ HomePage: Auth completion error:', error)
           alert('Ошибка авторизации. Попробуйте еще раз.')
         } finally {
           setAuthInProgress(false)
         }
+      } else {
+        console.log('📝 HomePage: No auth token, showing login form')
       }
     } catch (error) {
-      console.error('Ошибка проверки авторизации:', error)
+      console.error('❌ HomePage: General error in checkAuthState:', error)
     } finally {
       setIsLoading(false)
     }
