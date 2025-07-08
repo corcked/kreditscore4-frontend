@@ -79,7 +79,7 @@ export const authApi = {
 
   // Проверка статуса авторизации
   async checkAuthStatus(authToken: string): Promise<AuthResponse> {
-    const response = await api.post('/api/auth/verify', { auth_token: authToken })
+    const response = await api.get(`/api/auth/verify/${authToken}`)
     return response.data
   },
 
